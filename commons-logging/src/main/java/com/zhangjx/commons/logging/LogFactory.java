@@ -2,7 +2,6 @@ package com.zhangjx.commons.logging;
 
 import java.lang.reflect.Constructor;
 
-import com.zhangjx.commons.io.Resources;
 import com.zhangjx.commons.logging.exception.LogException;
 
 public class LogFactory {
@@ -56,37 +55,41 @@ public class LogFactory {
 		}
 	}
 	
+	public static synchronized void useCustomLogging(Class<? extends Log> clazz) {
+		setImplementation(clazz);
+	}
+	
 	public static synchronized void useSlf4jLogging() {
-		setImplementation("com.zhangjx.commons.logging.slf4j.Slf4jImpl");
+		setImplementation(com.zhangjx.commons.logging.slf4j.Slf4jImpl.class);
 	}
 	
 	public static synchronized void useNoLogging() {
-		setImplementation("com.zhangjx.commons.logging.nologging.NoLoggingImpl");
+		setImplementation(com.zhangjx.commons.logging.nologging.NoLoggingImpl.class);
 	}
 	
 	public static synchronized void useJdkLogging() {
-		setImplementation("com.zhangjx.commons.logging.jdk.JdkLoggingImpl");
+		setImplementation(com.zhangjx.commons.logging.jdk.JdkLoggingImpl.class);
 	}
 	
 	public static synchronized void useJclLogging() {
-		setImplementation("com.zhangjx.commons.logging.jcl.JakartaCommonsLoggingImpl");
+		setImplementation(com.zhangjx.commons.logging.jcl.JakartaCommonsLoggingImpl.class);
 	}
 	
 	public static synchronized void useStdoutLogging() {
-		setImplementation("com.zhangjx.commons.logging.stdout.StdoutImpl");
+		setImplementation(com.zhangjx.commons.logging.stdout.StdoutImpl.class);
 	}
 	
 	public static synchronized void useLog4jLogging() {
-		setImplementation("com.zhangjx.commons.logging.log4j.Log4jImpl");
+		setImplementation(com.zhangjx.commons.logging.log4j.Log4jImpl.class);
 	}
 	
-	@SuppressWarnings("unchecked")
-	private static void setImplementation(String implClassName) {
+	private static void setImplementation(Class<? extends Log> implClass) {
 		try {
-			Class<? extends Log> implClass = (Class<? extends Log>) Resources.classForName(implClassName);
 			Constructor<? extends Log> candidate = implClass.getConstructor(new Class[]{String.class});
 			Log log = candidate.newInstance(new Object[]{LogFactory.class.getName()});
-			log.debug("Logging initialized  using '" + implClassName + "' adapter.");
+			if(log.isDebugEnabled()) {
+				log.debug("Logging initialized  using '" + implClass + "' adapter.");
+			}
 			logConstructor = candidate;
 		} catch (Throwable t) {
 			throw new LogException("Error setting Log implementation.  Cause: " + t, t);
